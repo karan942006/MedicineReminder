@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedReminder — Smart Medication Compliance with Caregiver Link</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #FFFFFF;
+  --bg-dark: #F3F8F8;
+  --bg-card: #FFFFFF;
+  --bg-card2: #F0F6F6;
+  --royal: #1E3A8A;
+  --teal: #0D9488;
+  --teal-dim: rgba(13,148,136,0.08);
+  --teal-glow: rgba(13,148,136,0.30);
+  --violet: #6D5BD0;
+  --violet-dim: rgba(109,91,208,0.10);
+  --red: #E11D48;
+  --red-dim: rgba(225,29,72,0.08);
+  --gold: #C2740A;
+  --gold-dim: rgba(194,116,10,0.10);
+  --white: #142433;
+  --grey: #5C7286;
+  --border: rgba(13,148,136,0.22);
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--bg-deep); color: var(--white); overflow-x: hidden; position: relative; }
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.4;
+}
+
+/* ===== NAVBAR ===== */
+nav { position: fixed; top:0; left:0; right:0; z-index:1000; padding:1.2rem 4rem; display:flex; align-items:center; justify-content:space-between; transition: all 0.4s ease; }
+nav.scrolled { background: rgba(255,255,255,0.86); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0.9rem 4rem; }
+.nav-logo { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: var(--white); letter-spacing: -0.5px; display:flex; align-items:center; gap:0.5rem; }
+.nav-logo span { color: var(--teal); }
+.nav-links { display:flex; gap:2.5rem; list-style:none; }
+.nav-links a { color: var(--grey); text-decoration:none; font-size:0.88rem; font-weight:500; letter-spacing:0.5px; transition: color 0.3s; }
+.nav-links a:hover { color: var(--teal); }
+.nav-cta { background: var(--teal); color: var(--bg-deep); padding: 0.55rem 1.4rem; border-radius: 6px; font-weight:700; font-size:0.85rem; text-decoration:none; transition: all 0.3s; box-shadow: 0 0 20px var(--teal-glow); }
+.nav-cta:hover { background: #2fe0cb; box-shadow: 0 0 30px var(--teal-glow); }
+
+.hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; }
+.hamburger span { display:block; width:24px; height:2px; background: var(--white); border-radius:2px; }
+.mobile-menu { display:none; position:fixed; inset:0; background: rgba(255,255,255,0.97); z-index:999; flex-direction:column; align-items:center; justify-content:center; gap:2rem; }
+.mobile-menu.open { display:flex; }
+.mobile-menu a { font-family: var(--font-head); font-size:1.8rem; color: var(--white); text-decoration:none; font-weight:700; }
+.mobile-menu a:hover { color: var(--teal); }
+.close-menu { position:absolute; top:2rem; right:2rem; font-size:2rem; cursor:pointer; color: var(--grey); }
+
+/* ===== HERO ===== */
+#hero { min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; padding:6rem 2rem 4rem; }
+.hero-blobs { position:absolute; inset:0; z-index:0; overflow:hidden; }
+.blob { position:absolute; border-radius:50%; filter: blur(80px); opacity:0.18; animation: blobFloat 10s ease-in-out infinite; }
+.blob1 { width:600px; height:600px; background: radial-gradient(circle, var(--teal), transparent); top:-200px; left:-150px; }
+.blob2 { width:500px; height:500px; background: radial-gradient(circle, var(--royal), transparent); top:50%; right:-200px; animation-delay:-4s; }
+.blob3 { width:400px; height:400px; background: radial-gradient(circle, var(--violet) 40%, transparent); bottom:-100px; left:40%; animation-delay:-7s; }
+@keyframes blobFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-40px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.95); } }
+
+.hero-content { position:relative; z-index:1; max-width:900px; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.5rem; border:1px solid var(--border); background: var(--teal-dim); color: var(--teal); padding:0.45rem 1.2rem; border-radius:50px; font-size:0.8rem; font-weight:600; letter-spacing:1px; margin-bottom:2rem; animation: badgePulse 3s ease-in-out infinite; }
+@keyframes badgePulse { 0%,100% { box-shadow: 0 0 10px var(--teal-dim); } 50% { box-shadow: 0 0 25px var(--teal-glow); } }
+.hero-title { font-family: var(--font-head); font-size: clamp(2.4rem,6vw,5rem); font-weight:800; line-height:1.08; letter-spacing:-1.5px; margin-bottom:1.5rem; }
+.hero-title span { color: var(--teal); }
+.hero-sub { font-size: clamp(1rem,2vw,1.25rem); color: var(--grey); max-width:600px; margin:0 auto 2.5rem; line-height:1.7; }
+.hero-buttons { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+.btn-primary { background: var(--teal); color: var(--bg-deep); padding:0.85rem 2rem; border-radius:8px; font-weight:700; font-size:0.95rem; text-decoration:none; box-shadow: 0 0 30px var(--teal-glow); transition: all 0.3s; border:none; cursor:pointer; }
+.btn-primary:hover { background:#2fe0cb; transform: translateY(-2px); box-shadow: 0 0 50px var(--teal-glow); }
+.btn-ghost { border:1px solid var(--border); color: var(--white); padding:0.85rem 2rem; border-radius:8px; font-weight:600; font-size:0.95rem; text-decoration:none; transition: all 0.3s; background:transparent; cursor:pointer; }
+.btn-ghost:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+/* hero phone mockup */
+.hero-visual { margin-top: 3.2rem; display:flex; justify-content:center; }
+.phone-mock { width: 290px; background: var(--bg-card); border:1px solid var(--border); border-radius: 28px; padding: 1.6rem 1.5rem; position:relative; box-shadow: 0 30px 80px rgba(15,37,56,0.14), 0 0 40px var(--teal-dim); text-align:left; }
+.phone-mock-header { font-size:0.7rem; color: var(--grey); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1.3rem; display:flex; justify-content:space-between; align-items:center; }
+.ring { width:128px; height:128px; border-radius:50%; background: conic-gradient(var(--teal) 0% 85%, rgba(255,255,255,0.07) 85% 100%); display:flex; align-items:center; justify-content:center; margin: 0 auto 1.3rem; }
+.ring-inner { width:98px; height:98px; border-radius:50%; background: var(--bg-card); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-pct { font-family: var(--font-head); font-size:1.65rem; font-weight:800; color: var(--white); }
+.ring-label { font-size:0.62rem; color: var(--grey); text-transform:uppercase; letter-spacing:1px; margin-top:0.15rem; text-align:center; }
+.phone-mini-row { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid rgba(20,40,55,0.07); font-size:0.78rem; color: var(--grey); }
+.phone-mini-row:last-child { border-bottom:none; }
+.mini-badge { padding:0.15rem 0.55rem; border-radius:20px; font-size:0.66rem; font-weight:700; }
+.sos-fab { position:absolute; bottom:-16px; right:-16px; width:54px; height:54px; border-radius:50%; background: var(--red); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:0.62rem; letter-spacing:0.5px; box-shadow: 0 0 0 0 rgba(255,77,109,0.6); animation: sosPulse 2.2s infinite; border: 3px solid var(--bg-deep); }
+@keyframes sosPulse { 0% { box-shadow: 0 0 0 0 rgba(255,77,109,0.6); } 70% { box-shadow: 0 0 0 16px rgba(255,77,109,0); } 100% { box-shadow: 0 0 0 0 rgba(255,77,109,0); } }
+
+.scroll-down { position:absolute; bottom:2.2rem; left:50%; transform: translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:0.4rem; color: var(--grey); font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; animation: scrollBounce 2s ease-in-out infinite; }
+.scroll-down svg { width:20px; fill:none; stroke: var(--grey); stroke-width:2; }
+@keyframes scrollBounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+/* ===== SECTIONS COMMON ===== */
+section { padding: 6rem 2rem; }
+.container { max-width:1200px; margin:0 auto; }
+.section-label { font-size:0.75rem; font-weight:700; letter-spacing:3px; text-transform:uppercase; color: var(--teal); margin-bottom:1rem; }
+.section-title { font-family: var(--font-head); font-size: clamp(2rem,4vw,3rem); font-weight:800; line-height:1.15; letter-spacing:-0.5px; margin-bottom:1.2rem; }
+.section-sub { color: var(--grey); font-size:1.05rem; line-height:1.7; max-width:580px; }
+
+/* ===== DOWNLOAD ===== */
+#download { background: var(--bg-deep); border-top:1px solid var(--border); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+#download::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(20,184,166,0.08), transparent); pointer-events:none; }
+.download-inner { text-align:center; position:relative; z-index:1; }
+.download-inner .section-sub { margin: 0 auto 3rem; }
+.download-cards { display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap; }
+.dl-card { background: var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:2rem 2.2rem; width:230px; display:flex; flex-direction:column; align-items:center; gap:1rem; transition: all 0.35s ease; text-decoration:none; color: var(--white); position:relative; overflow:hidden; cursor:pointer; }
+.dl-card::before { content:''; position:absolute; inset:0; background: linear-gradient(135deg, var(--teal-dim), transparent); opacity:0; transition: opacity 0.35s; }
+.dl-card:hover::before { opacity:1; }
+.dl-card:hover { border-color: var(--teal); transform: translateY(-8px); box-shadow: 0 24px 60px rgba(15,37,56,0.12), 0 0 30px var(--teal-dim); }
+.dl-card.upcoming { border-color: rgba(255,209,102,0.25); cursor:default; }
+.dl-card.upcoming::before { background: linear-gradient(135deg, var(--gold-dim), transparent); }
+.dl-icon { width:60px; height:60px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; background: rgba(255,255,255,0.05); border:1px solid var(--border); position:relative; z-index:1; }
+.dl-card.upcoming .dl-icon { background: rgba(255,209,102,0.08); border-color: rgba(255,209,102,0.2); }
+.dl-label { font-size:0.72rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color: var(--grey); position:relative; z-index:1; }
+.dl-card.upcoming .dl-label { color: var(--gold); opacity:0.85; }
+.dl-title { font-family: var(--font-head); font-size:1.1rem; font-weight:700; position:relative; z-index:1; text-align:center; line-height:1.3; }
+.dl-desc { font-size:0.8rem; color: var(--grey); line-height:1.5; text-align:center; position:relative; z-index:1; }
+.dl-btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1.2rem; border-radius:8px; font-size:0.82rem; font-weight:700; background: var(--teal); color: var(--bg-deep); border:none; cursor:pointer; transition: all 0.3s; position:relative; z-index:1; box-shadow: 0 0 15px var(--teal-dim); }
+.dl-btn:hover { background:#2fe0cb; box-shadow: 0 0 25px var(--teal-glow); }
+.dl-btn.dl-btn-gold { background:transparent; color: var(--gold); border:1px solid rgba(255,209,102,0.3); box-shadow:none; cursor:default; }
+.upcoming-ribbon { position:absolute; top:14px; right:-22px; background: var(--gold); color: var(--bg-deep); font-size:0.65rem; font-weight:800; letter-spacing:1px; padding:3px 28px; transform: rotate(35deg); text-transform:uppercase; z-index:2; }
+.dl-note { margin-top: 2.2rem; font-size:0.78rem; color: var(--grey); }
+.dl-note code { color: var(--teal); background: var(--teal-dim); padding:0.1rem 0.4rem; border-radius:4px; }
+@media (max-width:700px) { .download-cards { flex-direction:column; align-items:center; } .dl-card { width:100%; max-width:320px; } }
+
+/* ===== PROBLEM ===== */
+#problem { background: var(--bg-dark); }
+.problem-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem; margin-top:3rem; }
+.problem-card { background: var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:2rem; transition: all 0.4s ease; opacity:0; transform: translateY(40px); position:relative; overflow:hidden; }
+.problem-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); opacity:0; transition: opacity 0.4s; }
+.problem-card:hover::before { opacity:1; }
+.problem-card.visible { opacity:1; transform: translateY(0); }
+.problem-card:hover { border-color: var(--teal); transform: translateY(-6px); box-shadow: 0 20px 60px rgba(15,37,56,0.12), 0 0 30px var(--teal-dim); }
+.problem-icon { width:52px; height:52px; background: var(--teal-dim); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:1.2rem; border:1px solid var(--border); }
+.problem-card h3 { font-family: var(--font-head); font-size:1.15rem; font-weight:700; margin-bottom:0.6rem; }
+.problem-card p { color: var(--grey); font-size:0.9rem; line-height:1.65; }
+
+/* ===== ABOUT ===== */
+#about { background: var(--bg-deep); }
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; }
+.about-left .big-quote { font-family: var(--font-head); font-size: clamp(2rem,3.5vw,2.8rem); font-weight:800; line-height:1.2; letter-spacing:-0.5px; }
+.about-left .big-quote span { color: var(--teal); }
+.about-left p { color: var(--grey); margin-top:1.5rem; line-height:1.7; }
+.feature-list { list-style:none; margin-top:1rem; }
+.feature-list li { display:flex; align-items:center; gap:1rem; padding:1rem 0; border-bottom:1px solid rgba(13,148,136,0.10); font-weight:500; font-size:0.95rem; opacity:0; transform: translateX(30px); transition: all 0.5s ease; }
+.feature-list li.visible { opacity:1; transform: translateX(0); }
+.feature-list li:last-child { border-bottom:none; }
+.feat-icon { width:36px; height:36px; background: var(--teal-dim); border-radius:8px; display:flex; align-items:center; justify-content:center; color: var(--teal); font-size:1rem; flex-shrink:0; border:1px solid var(--border); }
+
+/* ===== METRICS ===== */
+#metrics { background: linear-gradient(135deg, #EAF7F5 0%, #FFFFFF 100%); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.metrics-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:2rem; text-align:center; }
+.metric-item { padding:2rem 1rem; }
+.metric-number { font-family: var(--font-head); font-size: clamp(2.6rem,5vw,3.8rem); font-weight:800; color: var(--gold); line-height:1; letter-spacing:-2px; text-shadow: 0 0 30px rgba(255,209,102,0.4); }
+.metric-label { color: var(--grey); margin-top:0.5rem; font-size:0.9rem; font-weight:500; }
+
+/* ===== WORKFLOW ===== */
+#workflow { background: var(--bg-dark); overflow:hidden; }
+.workflow-steps { display:grid; grid-template-columns: repeat(5,1fr); gap:0; margin-top:3.5rem; position:relative; }
+.workflow-steps::before { content:''; position:absolute; top:40px; left:10%; right:10%; height:2px; background: repeating-linear-gradient(90deg, var(--teal) 0, var(--teal) 8px, transparent 8px, transparent 16px); z-index:0; opacity:0.4; animation: dashMove 2s linear infinite; }
+@keyframes dashMove { from { background-position:0 0; } to { background-position:32px 0; } }
+.step { display:flex; flex-direction:column; align-items:center; text-align:center; padding:0 0.8rem; position:relative; z-index:1; opacity:0; transform: translateY(30px); transition: all 0.5s ease; }
+.step.visible { opacity:1; transform: translateY(0); }
+.step-num { width:56px; height:56px; background: var(--bg-card); border:2px solid var(--teal); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:1.2rem; box-shadow: 0 0 20px var(--teal-dim); }
+.step h4 { font-family: var(--font-head); font-size:0.85rem; font-weight:700; margin-bottom:0.4rem; line-height:1.3; }
+.step p { color: var(--grey); font-size:0.78rem; line-height:1.5; }
+
+/* ===== ROLES ===== */
+#roles { background: var(--bg-deep); }
+.role-tabs { display:flex; gap:0.5rem; margin: 3rem 0 2rem; background: var(--bg-card); padding:0.4rem; border-radius:12px; border:1px solid var(--border); max-width:480px; }
+.role-tab { flex:1; padding:0.7rem 1rem; border-radius:8px; font-family: var(--font-head); font-weight:700; font-size:0.88rem; cursor:pointer; border:none; background:transparent; color: var(--grey); transition: all 0.3s; letter-spacing:0.5px; }
+.role-tab.active { background: var(--teal); color: var(--bg-deep); box-shadow: 0 0 20px var(--teal-glow); }
+.role-panel { display:none; animation: fadeIn 0.4s ease; }
+.role-panel.active { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:start; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+.role-info h3 { font-family: var(--font-head); font-size:1.8rem; font-weight:800; margin-bottom:0.5rem; }
+.role-icon-big { font-size:2.5rem; margin-bottom:1rem; }
+.role-info p { color: var(--grey); margin-bottom:1.5rem; line-height:1.7; }
+.role-capabilities { list-style:none; display:flex; flex-direction:column; gap:0.7rem; }
+.role-capabilities li { display:flex; align-items:center; gap:0.8rem; font-size:0.92rem; color: var(--white); }
+.role-capabilities li::before { content:'✦'; color: var(--teal); font-size:0.7rem; flex-shrink:0; }
+.role-mockup { background: var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:2rem; font-size:0.85rem; }
+.role-mockup-title { font-family: var(--font-head); font-size:0.75rem; font-weight:700; color: var(--teal); letter-spacing:2px; text-transform:uppercase; margin-bottom:1.5rem; padding-bottom:0.8rem; border-bottom:1px solid var(--border); }
+.mock-row { display:flex; align-items:center; justify-content:space-between; padding:0.65rem 0; border-bottom:1px solid rgba(20,40,55,0.07); color: var(--grey); font-size:0.82rem; }
+.mock-badge { padding:0.2rem 0.7rem; border-radius:20px; font-size:0.72rem; font-weight:600; }
+.badge-green { background: rgba(22,163,74,0.12); color:#15803D; }
+.badge-gold { background: var(--gold-dim); color: var(--gold); }
+.badge-teal { background: var(--teal-dim); color: var(--teal); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-grey { background: rgba(143,167,188,0.15); color: var(--grey); }
+
+/* ===== TECH STACK ===== */
+#tech { background: var(--bg-dark); }
+.tech-grid { display:flex; flex-wrap:wrap; gap:1rem; margin-top:3rem; justify-content:center; }
+.tech-badge { display:flex; align-items:center; gap:0.7rem; padding:0.8rem 1.5rem; border:1px solid var(--border); border-radius:50px; background: var(--bg-card); font-weight:600; font-size:0.88rem; transition: all 0.3s; cursor:default; }
+.tech-badge:hover { border-color: var(--teal); background: var(--teal-dim); color: var(--teal); box-shadow: 0 0 25px var(--teal-dim); transform: translateY(-3px); }
+.tech-badge span { font-size:1.1rem; }
+
+/* ===== ANALYTICS ===== */
+#analytics { background: var(--bg-deep); }
+.analytics-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; margin-top:1rem; }
+.donut-mock { width:220px; height:220px; border-radius:50%; margin: 0 auto; background: conic-gradient(#16A34A 0% 62%, var(--red) 62% 78%, var(--grey) 78% 100%); display:flex; align-items:center; justify-content:center; box-shadow: 0 0 40px var(--teal-dim); }
+.donut-inner { width:150px; height:150px; border-radius:50%; background: var(--bg-card); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut-inner .num { font-family: var(--font-head); font-size:2rem; font-weight:800; color: var(--white); }
+.donut-inner .lbl { font-size:0.7rem; color: var(--grey); text-transform:uppercase; letter-spacing:1px; }
+.donut-legend { display:flex; justify-content:center; gap:1.5rem; margin-top:1.5rem; flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color: var(--grey); }
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+
+/* ===== IMPACT ===== */
+#impact { background: var(--bg-card2); position:relative; overflow:hidden; }
+#impact::before { content:''; position:absolute; inset:0; background-image: repeating-linear-gradient(-45deg, rgba(20,184,166,0.03) 0, rgba(20,184,166,0.03) 1px, transparent 0, transparent 50%); background-size:30px 30px; }
+.impact-quote { text-align:center; position:relative; z-index:1; max-width:800px; margin:0 auto 4rem; }
+.impact-quote blockquote { font-family: var(--font-head); font-size: clamp(1.4rem,3vw,2.2rem); font-weight:700; line-height:1.4; letter-spacing:-0.3px; }
+.impact-quote blockquote span { color: var(--teal); }
+.impact-cols { display:grid; grid-template-columns: repeat(3,1fr); gap:2rem; position:relative; z-index:1; }
+.impact-col { text-align:center; padding:2rem; }
+.impact-col-icon { font-size:2.5rem; margin-bottom:1rem; }
+.impact-col h4 { font-family: var(--font-head); font-size:1.1rem; font-weight:700; margin-bottom:0.6rem; }
+.impact-col p { color: var(--grey); font-size:0.9rem; line-height:1.6; }
+
+/* ===== FAQ ===== */
+#faq { background: var(--bg-dark); }
+.faq-list { margin-top:3rem; display:flex; flex-direction:column; gap:1rem; max-width:760px; }
+.faq-item { background: var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.4rem 1.6rem; }
+.faq-item h4 { font-family: var(--font-head); font-size:1rem; font-weight:700; margin-bottom:0.5rem; color: var(--white); }
+.faq-item p { color: var(--grey); font-size:0.88rem; line-height:1.6; }
+
+/* ===== FOOTER ===== */
+footer { background: var(--bg-deep); position:relative; }
+footer::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, var(--teal), var(--gold), var(--teal), transparent); }
+.footer-main { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3rem; padding:4rem 4rem 2rem; max-width:1200px; margin:0 auto; }
+.footer-brand .logo { font-family: var(--font-head); font-size:1.3rem; font-weight:800; margin-bottom:0.8rem; }
+.footer-brand .logo span { color: var(--teal); }
+.footer-brand p { color: var(--grey); font-size:0.88rem; line-height:1.6; max-width:260px; }
+.footer-col h5 { font-family: var(--font-head); font-weight:700; font-size:0.85rem; letter-spacing:1px; color: var(--white); margin-bottom:1.2rem; }
+.footer-col ul { list-style:none; display:flex; flex-direction:column; gap:0.7rem; }
+.footer-col ul a { color: var(--grey); text-decoration:none; font-size:0.88rem; transition: color 0.3s; }
+.footer-col ul a:hover { color: var(--teal); }
+.footer-bottom { border-top:1px solid rgba(20,40,55,0.08); padding:1.5rem 4rem; display:flex; align-items:center; justify-content:space-between; max-width:1200px; margin:0 auto; flex-wrap:wrap; gap:1rem; }
+.footer-tagline { font-size:0.8rem; color: var(--grey); }
+.footer-tagline span { color: var(--teal); }
+.social-links { display:flex; gap:1rem; }
+.social-link { width:36px; height:36px; border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color: var(--grey); font-size:0.9rem; transition: all 0.3s; text-decoration:none; cursor:pointer; }
+.social-link:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:900px) {
+  nav { padding:1rem 1.5rem; } nav.scrolled { padding:0.8rem 1.5rem; }
+  .nav-links, .nav-cta { display:none; } .hamburger { display:flex; }
+  .about-grid, .analytics-grid { grid-template-columns:1fr; gap:3rem; }
+  .metrics-grid { grid-template-columns: repeat(2,1fr); }
+  .workflow-steps { grid-template-columns:1fr 1fr; gap:2rem; } .workflow-steps::before { display:none; }
+  .role-panel.active { grid-template-columns:1fr; }
+  .impact-cols { grid-template-columns:1fr; }
+  .footer-main { grid-template-columns:1fr 1fr; padding:3rem 2rem 1.5rem; }
+  .footer-bottom { flex-direction:column; text-align:center; padding:1.5rem 2rem; }
+}
+@media (max-width:600px) {
+  section { padding:4rem 1.2rem; }
+  .metrics-grid { grid-template-columns:1fr 1fr; }
+  .workflow-steps { grid-template-columns:1fr; }
+  .role-tabs { flex-direction:column; }
+  .footer-main { grid-template-columns:1fr; padding:2.5rem 1.5rem 1.5rem; }
+  .step { padding:0; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="nav-logo">💊 Med<span>Reminder</span></div>
+  <ul class="nav-links">
+    <li><a href="#problem">Why It Matters</a></li>
+    <li><a href="#about">Features</a></li>
+    <li><a href="#roles">Guardian Link</a></li>
+    <li><a href="#tech">Tech Stack</a></li>
+    <li><a href="#test-app">Test App</a></li>
+    <li><a href="#faq">FAQs</a></li>
+  </ul>
+  <a href="#download" class="nav-cta">Download App</a>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <span class="close-menu" id="closeMenu">✕</span>
+  <a href="#problem" onclick="closeMobile()">Why It Matters</a>
+  <a href="#about" onclick="closeMobile()">Features</a>
+  <a href="#workflow" onclick="closeMobile()">Workflow</a>
+  <a href="#roles" onclick="closeMobile()">Guardian Link</a>
+  <a href="#tech" onclick="closeMobile()">Tech Stack</a>
+  <a href="#test-app" onclick="closeMobile()">Test App</a>
+  <a href="#download" onclick="closeMobile()">Download</a>
+  <a href="#faq" onclick="closeMobile()">FAQs</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-blobs">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">⬡ Bilingual · English / मराठी &nbsp;✦&nbsp; Offline-First</div>
+    <h1 class="hero-title">Never Miss a Dose.<br><span>Never Worry Again.</span></h1>
+    <p class="hero-sub">A smart medicine reminder app that schedules alarms straight to your device — ringing even when you're offline — and keeps your family or caregivers connected in real time.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn-primary">Download APK</a>
+      <a href="#about" class="btn-ghost">Explore Features</a>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-mock">
+        <div class="phone-mock-header"><span>Today's Schedule</span><span>🇮🇳 EN / मर</span></div>
+        <div class="ring">
+          <div class="ring-inner">
+            <div class="ring-pct">85%</div>
+            <div class="ring-label">Compliance</div>
+          </div>
+        </div>
+        <div class="phone-mini-row"><span>Metformin · 8:00 AM</span><span class="mini-badge badge-green" style="background:rgba(22,163,74,0.12);color:#15803D;">Taken</span></div>
+        <div class="phone-mini-row"><span>Vitamin D3 · 1:00 PM</span><span class="mini-badge" style="background:var(--teal-dim);color:var(--teal);">Pending</span></div>
+        <div class="phone-mini-row"><span>Amlodipine · stock low</span><span class="mini-badge" style="background:var(--gold-dim);color:var(--gold);">Refill</span></div>
+        <div class="sos-fab">SOS</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-down"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="container">
+    <div class="download-inner">
+      <p class="section-label">Get the App</p>
+      <h2 class="section-title">Download MedReminder</h2>
+      <p class="section-sub">Get the app on your Android device today, or wait for our upcoming Play Store launch.</p>
+      <div class="download-cards">
+        <a href="https://github.com/karan942006/civictrackapp/raw/refs/heads/main/app-debug.apk" class="dl-card" target="_blank">
+          <div class="dl-icon">⚡</div>
+          <div class="dl-label">Direct Download</div>
+          <div class="dl-title">Instant APK</div>
+          <div class="dl-desc">Download the latest MedReminder APK directly to your Android device.</div>
+          <span class="dl-btn">⬇ Download APK</span>
+        </a>
+        <div class="dl-card upcoming">
+          <div class="upcoming-ribbon">Soon</div>
+          <div class="dl-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--gold)" xmlns="http://www.w3.org/2000/svg"><path d="M3.18 23.76a2 2 0 0 0 2.08-.21l.1-.07 10.49-6.06-3.01-3.01L3.18 23.76zM.5 1.1A2 2 0 0 0 0 2.5v19a2 2 0 0 0 .5 1.4l.07.07 10.64-10.64v-.25L.57 1.03.5 1.1zM20.33 10.6l-2.99-1.73-3.33 3.33 3.33 3.33 3-1.73a2 2 0 0 0 0-3.2zM5.26.45l10.49 6.07-3.01 3.01L3.18.24A2 2 0 0 0 5.26.45z"/></svg>
+          </div>
+          <div class="dl-label">Coming Soon</div>
+          <div class="dl-title">Google Play Store</div>
+          <div class="dl-desc">Our official Play Store listing is on the way. Stay tuned for the release.</div>
+          <span class="dl-btn dl-btn-gold">🔔 Notify Me</span>
+        </div>
+      </div>
+      <p class="dl-note">Installing from GitHub may require enabling "Install from unknown sources" in your Android settings.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEST THE APP -->
+<section id="test-app">
+  <div class="container">
+    <div class="download-inner">
+      <p class="section-label">Try It Now</p>
+      <h2 class="section-title">Test the App Online</h2>
+      <p class="section-sub">Preview a working build of the interface in your browser before installing the APK on a device.</p>
+      <div class="download-cards">
+        <a href="https://github.com/karan942006/civictrackapp/blob/main/working.html" class="dl-card" target="_blank">
+          <div class="dl-icon">🧪</div>
+          <div class="dl-label">Live Preview</div>
+          <div class="dl-title">Open Working Demo</div>
+          <div class="dl-desc">View the working.html build on GitHub to explore the interface before installing.</div>
+          <span class="dl-btn">🔗 Open Demo</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="container">
+    <p class="section-label">The Problem</p>
+    <h2 class="section-title">Medication Adherence Shouldn't Be This Hard</h2>
+    <p class="section-sub">Patients, caregivers, and families all face the same gap — no reliable way to track, verify, and coordinate medicine schedules.</p>
+    <div class="problem-grid">
+      <div class="problem-card" data-delay="0">
+        <div class="problem-icon">🧓</div>
+        <h3>Missed Doses, Real Risks</h3>
+        <p>Patients managing chronic conditions juggle multiple daily doses, stock counts, and dosage sizes — a single missed reminder can mean a missed dose.</p>
+      </div>
+      <div class="problem-card" data-delay="150">
+        <div class="problem-icon">📵</div>
+        <h3>The Caregiver Blind Spot</h3>
+        <p>Long-distance family members have no visibility into whether an aging parent or child has taken their medicine, short of repeated phone calls.</p>
+      </div>
+      <div class="problem-card" data-delay="300">
+        <div class="problem-icon">🧩</div>
+        <h3>Fragmented Family Schedules</h3>
+        <p>Multi-dependent households juggle separate routines for every family member, with no single place to see who's taken what, and when.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-left">
+        <p class="section-label">What is MedReminder</p>
+        <div class="big-quote">The reminder that rings even when the world is <span>offline</span>.</div>
+        <p>MedReminder schedules alarms directly on your Android device, so they fire on time whether or not you have a signal. Patients get a clean daily scheduler with stock tracking; caregivers get a real-time window into compliance — no manual updates required.</p>
+      </div>
+      <div class="about-right">
+        <ul class="feature-list" id="featureList">
+          <li><div class="feat-icon">⏰</div> Offline Local Alarms via AlarmManager</li>
+          <li><div class="feat-icon">🔁</div> Dual Patient + Guardian Portal Mode</li>
+          <li><div class="feat-icon">📡</div> Real-Time Caregiver Sync with Firestore</li>
+          <li><div class="feat-icon">🆘</div> One-Tap Emergency SOS Panic Button</li>
+          <li><div class="feat-icon">🌐</div> Bilingual Interface — English / मराठी</li>
+          <li><div class="feat-icon">💊</div> Smart Low-Stock Refill Warnings</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section id="metrics">
+  <div class="container">
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="metric-number" data-target="100" data-suffix="%">0%</div>
+        <div class="metric-label">Offline Alarm Reliability</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-number" data-target="2" data-suffix="" >0</div>
+        <div class="metric-label">Languages Supported</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-number" data-target="5" data-suffix="">0</div>
+        <div class="metric-label">Pill Low-Stock Threshold</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-number" data-target="10" data-suffix="m">0m</div>
+        <div class="metric-label">Snooze Window</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow">
+  <div class="container">
+    <p class="section-label">How It Works</p>
+    <h2 class="section-title">From Schedule to Safety Net</h2>
+    <p class="section-sub">A seamless flow that turns a daily medicine schedule into a live, family-wide safety net.</p>
+    <div class="workflow-steps">
+      <div class="step" data-delay="0">
+        <div class="step-num">📋</div>
+        <h4>Add a Medicine</h4>
+        <p>Set the name, dosage, time, stock count, and frequency once</p>
+      </div>
+      <div class="step" data-delay="100">
+        <div class="step-num">⏰</div>
+        <h4>Alarm Fires</h4>
+        <p>A full-screen lock-screen overlay rings on time, online or off</p>
+      </div>
+      <div class="step" data-delay="200">
+        <div class="step-num">✅</div>
+        <h4>Log the Dose</h4>
+        <p>Tap Taken, Snooze 10m, or Skip directly from the overlay</p>
+      </div>
+      <div class="step" data-delay="300">
+        <div class="step-num">🔄</div>
+        <h4>Sync Instantly</h4>
+        <p>Firestore pushes the update to the Guardian Portal in real time</p>
+      </div>
+      <div class="step" data-delay="400">
+        <div class="step-num">📊</div>
+        <h4>Track Adherence</h4>
+        <p>Daily, weekly, and monthly reports update automatically</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section id="roles">
+  <div class="container">
+    <p class="section-label">Guardian Link</p>
+    <h2 class="section-title">Built for Patients and Their Families</h2>
+    <p class="section-sub">Two connected experiences — one for managing your own schedule, one for watching over someone else's.</p>
+
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="switchRole('patient')">💊 Patient Portal</button>
+      <button class="role-tab" onclick="switchRole('guardian')">👨‍👩‍👧 Guardian Portal</button>
+    </div>
+
+    <div class="role-panel active" id="role-patient">
+      <div class="role-info">
+        <div class="role-icon-big">💊</div>
+        <h3>Patient Portal</h3>
+        <p>A clean daily timeline for managing dosage, stock, and chronic medication — with one tap to log a dose or call for help.</p>
+        <ul class="role-capabilities">
+          <li>Pending, Taken, and Skipped timeline view</li>
+          <li>Color-coded pills with custom dosing intervals</li>
+          <li>Amber refill warning when stock drops to 5 or fewer</li>
+          <li>Prescription photo gallery and family profiles</li>
+        </ul>
+      </div>
+      <div class="role-mockup">
+        <div class="role-mockup-title">📱 Patient App — Today</div>
+        <div class="mock-row"><span>Metformin 500mg — 8:00 AM</span><span class="mock-badge badge-green">Taken</span></div>
+        <div class="mock-row"><span>Vitamin D3 1000 IU — 1:00 PM</span><span class="mock-badge badge-teal">Pending</span></div>
+        <div class="mock-row"><span>Amlodipine 5mg — 9:00 PM</span><span class="mock-badge badge-grey">Skipped</span></div>
+        <div class="mock-row"><span>Amlodipine stock</span><span class="mock-badge badge-gold">4 left · Refill</span></div>
+        <div class="mock-row" style="margin-top:1rem; border:none; color: var(--teal); font-size:0.8rem; font-weight:600;">+ Add New Medicine</div>
+      </div>
+    </div>
+
+    <div class="role-panel" id="role-guardian">
+      <div class="role-info">
+        <div class="role-icon-big">👨‍👩‍👧</div>
+        <h3>Guardian Portal</h3>
+        <p>Enter a patient's Telemetry Link Code to couple a live stream of their compliance — no follow-up calls required.</p>
+        <ul class="role-capabilities">
+          <li>Real-time adherence rate and dose counts</li>
+          <li>Live timeline feed of Taken / Skipped / Missed logs</li>
+          <li>Instant pings the moment a dose is logged</li>
+          <li>Emergency SOS broadcast alerts, front and center</li>
+        </ul>
+      </div>
+      <div class="role-mockup">
+        <div class="role-mockup-title">📊 Guardian App — Live Stream</div>
+        <div class="mock-row"><span>Adherence Rate Today</span><span class="mock-badge badge-green">92%</span></div>
+        <div class="mock-row"><span>Doses Taken</span><span class="mock-badge badge-teal">3 / 4</span></div>
+        <div class="mock-row"><span>Last Logged Dose</span><span class="mock-badge badge-grey">2 min ago</span></div>
+        <div class="mock-row"><span>SOS Status</span><span class="mock-badge badge-green">All Clear</span></div>
+        <div class="mock-row" style="margin-top:1rem; border:none; color: var(--grey); font-size:0.78rem;">Synced live via Firestore · Couple Sync Stream active</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="container">
+    <p class="section-label">Technology Stack</p>
+    <h2 class="section-title">Powered by a Reliable, Offline-First Stack</h2>
+    <p class="section-sub">Built with native Android tooling so reminders never depend on a network connection.</p>
+    <div class="tech-grid">
+      <div class="tech-badge"><span>🤖</span> Kotlin</div>
+      <div class="tech-badge"><span>🎨</span> Jetpack Compose</div>
+      <div class="tech-badge"><span>🗄️</span> Room Database</div>
+      <div class="tech-badge"><span>🔥</span> Firebase Firestore</div>
+      <div class="tech-badge"><span>🔑</span> Firebase Authentication</div>
+      <div class="tech-badge"><span>⏰</span> AlarmManager</div>
+      <div class="tech-badge"><span>📶</span> BroadcastReceiver</div>
+      <div class="tech-badge"><span>⚙️</span> MedicineAlarmService</div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYTICS -->
+<section id="analytics">
+  <div class="container">
+    <div class="analytics-grid">
+      <div class="analytics-left">
+        <p class="section-label">Analytics</p>
+        <h2 class="section-title">Track Progress with Detailed Reports</h2>
+        <p class="section-sub">Filter by Today, Weekly, Monthly, or All Time. Visualize compliance with donut breakdowns and stacked weekly bars — easy to share with a doctor at a checkup.</p>
+      </div>
+      <div class="analytics-right">
+        <div class="donut-mock">
+          <div class="donut-inner">
+            <div class="num">78%</div>
+            <div class="lbl">Adherence</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#16A34A;"></span> Taken</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--red);"></span> Missed</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--grey);"></span> Skipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact">
+  <div class="container">
+    <div class="impact-quote">
+      <blockquote>"MedReminder doesn't just track pills — it <span>bridges the distance</span> between patients and the people who worry about them."</blockquote>
+    </div>
+    <div class="impact-cols">
+      <div class="impact-col">
+        <div class="impact-col-icon">🧓</div>
+        <h4>Patients</h4>
+        <p>A simple, independent way to manage chronic conditions without feeling micromanaged.</p>
+      </div>
+      <div class="impact-col">
+        <div class="impact-col-icon">👨‍👩‍👧</div>
+        <h4>Caregivers</h4>
+        <p>Real visibility into a loved one's compliance, without another follow-up phone call.</p>
+      </div>
+      <div class="impact-col">
+        <div class="impact-col-icon">🏡</div>
+        <h4>Families</h4>
+        <p>One shared view for every family member's schedule, color-coded and easy to follow.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <p class="section-label">FAQs</p>
+    <h2 class="section-title">Common Questions</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h4>Does MedReminder work without internet?</h4>
+        <p>Yes — alarms are scheduled locally on your device using Android's AlarmManager, so they fire on time even if you're offline.</p>
+      </div>
+      <div class="faq-item">
+        <h4>How does a caregiver connect to a patient?</h4>
+        <p>The caregiver switches to Guardian Mode, enters the patient's unique Telemetry Link Code, and taps Couple Sync Stream to start receiving live updates.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Is the app available in Marathi?</h4>
+        <p>Yes — MedReminder offers an instant translation toggle between English and मराठी throughout the interface.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What happens when stock runs low?</h4>
+        <p>An amber refill warning banner appears automatically once a medicine's stock count drops to 5 pills or fewer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="logo">💊 Med<span>Reminder</span></div>
+      <p>Smart medication compliance with caregiver link — bridging the gap between adherence and peace of mind, for patients and their families.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Product</h5>
+      <ul>
+        <li><a href="#about">Features</a></li>
+        <li><a href="#workflow">How It Works</a></li>
+        <li><a href="#roles">Guardian Link</a></li>
+        <li><a href="#tech">Tech Stack</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Resources</h5>
+      <ul>
+        <li><a href="#faq">FAQs</a></li>
+        <li><a href="#analytics">Analytics</a></li>
+        <li><a href="#test-app">Test the App</a></li>
+        <li><a href="#download">Download</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Contact Support</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-tagline">© 2026 <span>MedReminder</span>. Smart Medication Compliance Protection.</p>
+    <div class="social-links">
+      <a href="#" class="social-link">𝕏</a>
+      <a href="#" class="social-link">in</a>
+      <a href="#" class="social-link">✉</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.add('open');
+});
+document.getElementById('closeMenu').addEventListener('click', closeMobile);
+function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const delay = el.dataset.delay || 0;
+      setTimeout(() => el.classList.add('visible'), parseInt(delay));
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.problem-card').forEach(el => observer.observe(el));
+
+const featObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('li').forEach((item, i) => {
+        setTimeout(() => item.classList.add('visible'), i * 100);
+      });
+    }
+  });
+}, { threshold: 0.2 });
+const featList = document.getElementById('featureList');
+if (featList) featObserver.observe(featList);
+
+const workObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.step').forEach(step => {
+        const delay = step.dataset.delay || 0;
+        setTimeout(() => step.classList.add('visible'), parseInt(delay));
+      });
+    }
+  });
+}, { threshold: 0.1 });
+const workSection = document.querySelector('.workflow-steps');
+if (workSection) workObserver.observe(workSection);
+
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  const suffix = el.dataset.suffix || '';
+  const duration = 2000;
+  const step = target / (duration / 16);
+  let current = 0;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current) + suffix;
+    if (current >= target) clearInterval(timer);
+  }, 16);
+}
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.metric-number').forEach(animateCounter);
+      counterObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+const metricsSection = document.getElementById('metrics');
+if (metricsSection) counterObserver.observe(metricsSection);
+
+function switchRole(role) {
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.role-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="switchRole('${role}')"]`).classList.add('active');
+  document.getElementById('role-' + role).classList.add('active');
+}
+</script>
+</body>
+</html>
