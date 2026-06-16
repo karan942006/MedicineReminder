@@ -369,18 +369,24 @@ footer::before { content:''; position:absolute; top:0; left:0; right:0; height:1
 </section>
 
 <!-- TEST THE APP -->
-   <div id="working-content"></div>
-
-    <script>
-        fetch("working.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("working-content").innerHTML = data;
-            })
-            .catch(error => {
-                console.error("Error loading working.html:", error);
-            });
-    </script>
+   <section id="test-app">
+  <div class="container">
+    <div class="download-inner">
+      <p class="section-label">Try It Now</p>
+      <h2 class="section-title">Test the App Online</h2>
+      <p class="section-sub">Preview a working build of the interface in your browser before installing the APK on a device.</p>
+      <div class="download-cards">
+        <a href="https://github.com/karan942006/civictrackapp/blob/main/working.html" class="dl-card" target="_blank">
+          <div class="dl-icon">🧪</div>
+          <div class="dl-label">Live Preview</div>
+          <div class="dl-title">Open Working Demo</div>
+          <div class="dl-desc">View the working.html build on GitHub to explore the interface before installing.</div>
+          <span class="dl-btn">🔗 Open Demo</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- PROBLEM -->
 <section id="problem">
