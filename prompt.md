@@ -1233,4 +1233,4 @@ Build in this order:
 - All `PendingIntent` must include `FLAG_IMMUTABLE` (required Android 12+)
 - `AlarmManager.setExactAndAllowWhileIdle()` or `setAlarmClock()` required for Android 6+ Doze mode
 - Request `SCHEDULE_EXACT_ALARM` permission at runtime on Android 12+ via `Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM` intent
-- Request `POST_NOTIFICATIONS` permission at runtime on Android 13+ using `ActivityCompat.requestPermissions()`
+- Request `POST_NOTIFICATIONS` permission at runtime on Android 13+ using `ActivityCompat.requestPermissions()`       Adding Supabase As Firebase As Backend and Database
